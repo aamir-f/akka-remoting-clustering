@@ -5,12 +5,34 @@ import akka.remote.RemoteScope
 import akka.routing.FromConfig
 import com.typesafe.config.ConfigFactory
 
-object DeployingActorsRemotely_LocalApp extends App {
+/**
+  * Remote Deployment
+  * Name of the actor is checked in config for remote deployment,
+     if present, then Props will be passed to remote actor system,
+     the actor will be then created in remote actor system and its actorRef
+     is returned back.
+     For this, Props object needs to be Serializable and
+     actor class needs to be in the remote JVM's classpath
+  * If it's not there, then it will be created locally
+  */
+object DeployingActorsRemotely_Local_App extends App {
   val system = ActorSystem("LocalActorSystem", ConfigFactory.load("part2_remoting/deployingActorsRemotely.conf").getConfig("localApp"))
 
   val simpleActor = system.actorOf(Props[SimpleActor], "remoteActor") // /user/remoteActor
   simpleActor ! "hello, remote actor!"
 
+}
+
+object DeployingActorsRemotely_Remote_App extends App {
+  val system = ActorSystem("RemoteActorSystem", ConfigFactory.load("part2_remoting/deployingActorsRemotely.conf").getConfig("remoteApp"))
+}
+
+object DeployingActorsRemotely_LocalApp extends App {
+
+  val system = ActorSystem("LocalActorSystem", ConfigFactory.load("part2_remoting/deployingActorsRemotely.conf").getConfig("localApp"))
+
+  val simpleActor = system.actorOf(Props[SimpleActor], "remoteActor") // /user/remoteActor
+  simpleActor ! "hello, remote actor!"
   // actor path of a remotely deployed actor
   println(simpleActor)
   // expected: akka://RemoteActorSystem@localhost:2552/user/remoteActor
