@@ -42,8 +42,6 @@ class WordCountMaster1 extends Actor with ActorLogging {
     case text: String =>
       // split it into sentences
       val sentences = text.split("\\. ")
-      println("sentence length: " + sentences.length)
-      println("rem task: " + remainingTasks)
       // send sentences to workers in turn
       Iterator.continually(workers).flatten.zip(sentences.iterator).foreach { pair =>
         val (worker, sentence) = pair
