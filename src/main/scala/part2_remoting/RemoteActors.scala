@@ -1,6 +1,6 @@
 package part2_remoting
 
-import akka.actor.{Actor, ActorIdentity, ActorLogging, ActorRef, ActorSystem, Identify, Props}
+import akka.actor.{Actor, ActorIdentity, ActorLogging, ActorRef, ActorSelection, ActorSystem, Identify, Props}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 
@@ -36,7 +36,7 @@ object RemoteActors3 extends App {
 
   // Method 2: resolve the actor selection to an actor ref
   import localSystem.dispatcher
-  val remoteActorSelection = localSystem.actorSelection("akka://RemoteSystem@localhost:2552/user/remoteSimpleActor")
+  val remoteActorSelection: ActorSelection = localSystem.actorSelection("akka://RemoteSystem@localhost:2552/user/remoteSimpleActor")
   implicit val timeout = Timeout(3.seconds)
   val remoteActorRefFuture: Future[ActorRef] = remoteActorSelection.resolveOne()
   remoteActorRefFuture.onComplete {

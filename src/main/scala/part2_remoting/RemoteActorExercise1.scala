@@ -2,7 +2,7 @@ package part2_remoting
 
 import akka.actor.{Actor, ActorIdentity, ActorLogging, ActorRef, ActorSystem, Identify, PoisonPill, Props}
 import akka.routing.FromConfig
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 
 object WordCountDomain1 {
   case class Initialize1(nWorkers: Int)
@@ -43,7 +43,7 @@ class WordCountMaster1 extends Actor with ActorLogging {
       // split it into sentences
       val sentences = text.split("\\. ")
       println("sentence length: " + sentences.length)
-      println("rem task: " +remainingTasks)
+      println("rem task: " + remainingTasks)
       // send sentences to workers in turn
       Iterator.continually(workers).flatten.zip(sentences.iterator).foreach { pair =>
         val (worker, sentence) = pair
@@ -67,7 +67,7 @@ class WordCountMaster1 extends Actor with ActorLogging {
 object MasterApp1 extends App {
   import WordCountDomain1._
 
-  val config = ConfigFactory.parseString(
+  val config: Config = ConfigFactory.parseString(
     """
       |akka.remote.artery.canonical.port = 2551
     """.stripMargin)

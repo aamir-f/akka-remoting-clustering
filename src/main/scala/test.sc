@@ -1,0 +1,1 @@
+Iterator.continually(1)
