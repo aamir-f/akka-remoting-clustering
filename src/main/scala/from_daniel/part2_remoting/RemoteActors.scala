@@ -1,4 +1,4 @@
-package part2_remoting
+package from_daniel.part2_remoting
 
 import akka.actor.{Actor, ActorIdentity, ActorLogging, ActorRef, ActorSelection, ActorSystem, Identify, Props}
 import akka.util.Timeout
@@ -9,8 +9,8 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object RemoteActors1 extends App {
-  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remoteActors.conf"))
-  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("part2_remoting/remoteActors.conf").getConfig("remoteSystem"))
+  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("from_daniel/part2_remoting/remoteActors.conf"))
+  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("from_daniel/part2_remoting/remoteActors.conf").getConfig("remoteSystem"))
 
   val localSimpleActor = localSystem.actorOf(Props[SimpleActor], "localSimpleActor")
   val remoteSimpleActor = remoteSystem.actorOf(Props[SimpleActor], "remoteSimpleActor")
@@ -23,7 +23,7 @@ object RemoteActors1 extends App {
 }
 
 object RemoteActors2 extends App {
-  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remoteActors.conf"))
+  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remote_actors.conf"))
 
  // send a message to Remote Simple actor running on different JVM
   //Method 1: actor selection
@@ -32,7 +32,7 @@ object RemoteActors2 extends App {
 }
 
 object RemoteActors3 extends App {
-  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remoteActors.conf"))
+  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remote_actors.conf"))
 
   // Method 2: resolve the actor selection to an actor ref
   import localSystem.dispatcher
@@ -47,7 +47,7 @@ object RemoteActors3 extends App {
 
 object RemoteActors4 extends App {
 
-  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remoteActors.conf"))
+  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remote_actors.conf"))
 
   // Method 3: actor identification via messages or via actor identification protocol
   /*
@@ -72,7 +72,7 @@ object RemoteActors4 extends App {
 }
 
 object RemoteActors_Remote extends App {
-  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("part2_remoting/remoteActors.conf").getConfig("remoteSystem"))
+  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("part2_remoting/remote_actors.conf").getConfig("remoteSystem"))
   val remoteSimpleActor = remoteSystem.actorOf(Props[SimpleActor], "remoteSimpleActor")
   remoteSimpleActor ! "hello, remote actor!"
 }

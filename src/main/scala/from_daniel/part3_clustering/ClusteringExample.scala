@@ -1,4 +1,4 @@
-package part3_clustering
+package from_daniel.part3_clustering
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Address, Props, ReceiveTimeout}
 import akka.cluster.Cluster

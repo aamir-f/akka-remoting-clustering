@@ -1,4 +1,4 @@
-package playground
+package from_daniel.playground
 
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory

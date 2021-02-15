@@ -1,4 +1,4 @@
-package part3_clustering
+package from_daniel.part3_clustering
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.routing.FromConfig

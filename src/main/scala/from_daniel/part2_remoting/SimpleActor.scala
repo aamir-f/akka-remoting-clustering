@@ -1,4 +1,4 @@
-package part2_remoting
+package from_daniel.part2_remoting
 
 import akka.actor.{Actor, ActorLogging}
 
