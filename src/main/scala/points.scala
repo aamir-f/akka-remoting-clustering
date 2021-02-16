@@ -19,9 +19,13 @@
   * Location Transparency: (to meet above principles)
       --> if we ask or tell, actor can be anywhere, we don't care.
       --> i.e we don't care where the object is
+      --> Local calls look like remote calls (Assume you are always making remote calls)
+      --> You have to assume remote failure scenarios can occur (e.g network failures)
   * Transparent Remoting:
       --> we're using the object as if it were local
           (behind the scene it interacts with object deployed elsewhere) e.g Java-RMI
+      --> Remote calls look like local calls (Hides the fact that we are making remote calls)
+      --> Hides potential failure scenarios (e.g network failures)
   * Location Transparency != Transparent Remoting
   */
 

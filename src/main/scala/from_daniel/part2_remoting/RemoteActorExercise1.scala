@@ -87,8 +87,8 @@ object WorkersApp1 extends App {
     """
       |akka.remote.artery.canonical.port = 2552
     """.stripMargin)
-    .withFallback(ConfigFactory.load("part2_remoting/remoteActorsExercise1.conf"))
+    .withFallback(ConfigFactory.load("from_daniel/part2_remoting/remoteActorsExercise1.conf"))
 
   val system = ActorSystem("WorkersSystem", config)
-  (1 to 3).map(i => system.actorOf(Props[WordCountWorker1], s"wordCountWorker$i"))
+  (1 to 3).map(i => system.actorOf(Props[WordCountWorker1], s"WordCountWorker$i"))
 }
