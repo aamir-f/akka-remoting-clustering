@@ -1,4 +1,5 @@
-package com.aamir.akka
+package learning
+
 
 import akka.actor.{Actor, ActorSystem, Props}
 

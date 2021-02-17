@@ -23,7 +23,7 @@ object RemoteActors1 extends App {
 }
 
 object RemoteActors2 extends App {
-  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("part2_remoting/remote_actors.conf"))
+  val localSystem = ActorSystem("LocalSystem", ConfigFactory.load("from_daniel/part2_remoting/remoteActors.conf"))
 
  // send a message to Remote Simple actor running on different JVM
   //Method 1: actor selection
@@ -72,7 +72,7 @@ object RemoteActors4 extends App {
 }
 
 object RemoteActors_Remote extends App {
-  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("part2_remoting/remote_actors.conf").getConfig("remoteSystem"))
+  val remoteSystem = ActorSystem("RemoteSystem", ConfigFactory.load("from_daniel/part2_remoting/remoteActors.conf").getConfig("remoteSystem"))
   val remoteSimpleActor = remoteSystem.actorOf(Props[SimpleActor], "remoteSimpleActor")
   remoteSimpleActor ! "hello, remote actor!"
 }
