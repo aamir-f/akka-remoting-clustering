@@ -1,6 +1,6 @@
 package learning
 
-import akka.actor.{Actor, ActorSystem, Address, AddressFromURIString, Deploy, Props}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Address, AddressFromURIString, Deploy, PoisonPill, Props, Terminated}
 import akka.remote.RemoteScope
 import akka.routing.FromConfig
 import com.typesafe.config.ConfigFactory
@@ -51,6 +51,45 @@ object DeployingActorRemotely_Local_Application_2 extends App {
 
 }
 
+/**
+  * The PHI accrual failure detection:
+  * actor system sends heartbeat messages once a connection is established by sending a message or deploying a remote actor.
+  * If a heart beat times out, its reach score (PHI) increases.
+  * If the PHI score passes a threshold, the connection is quarantined = unreachable
+  * the local actor system sending Terminated messages to Death Watchers of remote actors (here death watcher is in local AS)
+  * So any message sent by local AS to remote AS now goes to dead letters (mostly heartbeat messages)
+  * the remote actor system must be restarted to reestablish connection.
+  */
+
+// watching remote actor
+
+object DeployingActorRemotely_Local_Application_3 extends App {
+
+  class ParentActor extends Actor with ActorLogging {
+    override def receive: Receive = {
+      case "create"        =>
+        log.info("creating remote child actor")
+        val child = context.actorOf(Props[SimpleActor], "remoteChildActor")
+        context.watch(child)
+      case Terminated(ref) => log.warning(s"child: $ref terminated")
+    }
+  }
+  val system = ActorSystem("LocalActorSystem",
+    ConfigFactory.load("remoting/deploying_actors_remotely.conf").getConfig("localApp"))
+
+
+  val parentActor = system.actorOf(Props[ParentActor], "watcher")
+  parentActor.tell("create", Actor.noSender)
+
+  Thread.sleep(1000)
+ // val remoteChild = system.
+   // actorSelection("akka://RemoteActorSystem@localhost:2552/remote/akka/LocalActorSystem@localhost:2551/user/watcher/remoteChildActor")
+ // remoteChild.tell(PoisonPill, Actor.noSender)
+
+
+}
+
 object DeployingActorRemotely_Remote_Application extends App {
-  val system = ActorSystem("RemoteActorSystem", ConfigFactory.load("remoting/deploying_actors_remotely.conf").getConfig("remoteApp"))
+  val system = ActorSystem("RemoteActorSystem",
+    ConfigFactory.load("remoting/deploying_actors_remotely.conf").getConfig("remoteApp"))
 }
