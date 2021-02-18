@@ -1,6 +1,6 @@
 package learning
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Address, AddressFromURIString, Deploy, PoisonPill, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Address, AddressFromURIString, Deploy, PoisonPill, Props, Terminated}
 import akka.remote.RemoteScope
 import akka.routing.FromConfig
 import com.typesafe.config.ConfigFactory
@@ -38,7 +38,7 @@ object DeployingActorRemotely_Local_Application_1 extends App {
 
 object DeployingActorRemotely_Local_Application_2 extends App {
   val system = ActorSystem("LocalActorSystem", ConfigFactory.load("remoting/deploying_actors_remotely.conf").getConfig("localApp"))
-  val simpleActor = system.actorOf(Props[SimpleActor], "remoteActor") // user/remoteActor
+  val simpleActor: ActorRef = system.actorOf(Props[SimpleActor], "remoteActor") // user/remoteActor
 
   //Router with routees deployed remotely
   /**
@@ -46,7 +46,7 @@ object DeployingActorRemotely_Local_Application_2 extends App {
     * in this case, router will also deploy its children in between these 2 JVM's
     */
 
-  val poolRouter = system.actorOf(FromConfig.props(Props[SimpleActor]), "myRouterWithRemoteChildren")
+  val poolRouter: ActorRef = system.actorOf(FromConfig.props(Props[SimpleActor]), "myRouterWithRemoteChildren")
   (1 to 10).foreach(x => poolRouter ! s"message $x")
 
 }
@@ -81,10 +81,10 @@ object DeployingActorRemotely_Local_Application_3 extends App {
   val parentActor = system.actorOf(Props[ParentActor], "watcher")
   parentActor.tell("create", Actor.noSender)
 
-  Thread.sleep(1000)
- // val remoteChild = system.
-   // actorSelection("akka://RemoteActorSystem@localhost:2552/remote/akka/LocalActorSystem@localhost:2551/user/watcher/remoteChildActor")
- // remoteChild.tell(PoisonPill, Actor.noSender)
+  Thread.sleep(10000)
+//  val remoteChild = system.
+//    actorSelection("akka://RemoteActorSystem@localhost:2552/remote/akka/LocalActorSystem@localhost:2551/user/watcher/remoteChildActor")
+//  remoteChild.tell(PoisonPill, Actor.noSender)
 
 
 }
