@@ -1,0 +1,8 @@
+-->The akka-cluster module provides a very simple cluster membership service which lays the foundations for all
+   higher-level cluster features of Akka.A cluster is made up from collaborating actor systems called member nodes.
+   It is important to understand that cluster membership happens at the level of actor systems,not individual actors.
+   Nevertheless it can be used to build high-level cluster features which apply to individual actors
+
+
+//From Daniel
+--> Clustering allows to build distributed application
