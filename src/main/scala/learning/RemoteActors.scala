@@ -71,7 +71,12 @@ object Local_JVM1_AS_Fetching_Remote_AS_Actor_3 extends App {
 }
 
 
-
+/**
+  *From Daniel:
+  *  The remote actor receives the message after the guardian actor system receives it.
+  *  Because there is no sender in the original message, the guardian just adds (its local) deadLetters actor
+  *  as the sender, which explains why you're seeing this log.
+  */
 object RemoteActor_Separate_JVM2 extends App {
   val remote_as_jvm = ActorSystem("Remote_AS_JVM", ConfigFactory.load("remoting/remote_actors.conf").getConfig("remote_actor_system"))
   val remote_as_jvm_simple_actor = remote_as_jvm.actorOf(Props[SimpleActor], "remote_as_jvm_simple_actor")
