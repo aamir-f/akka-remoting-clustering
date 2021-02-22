@@ -1,0 +1,26 @@
+
+[INFO] [02/22/2021 10:43:44.174] [main] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2551] - Started up successfully
+[INFO] [02/22/2021 10:43:44.788] [main] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2552] - Started up successfully
+[INFO] [02/22/2021 10:43:45.011] [main] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:54341] - Started up successfully
+
+ Cluster Node [akka://RTJVMCluster@localhost:2551] - Node [akka://RTJVMCluster@localhost:2551] is JOINING itself (with roles [dc-default]) and forming new cluster
+[akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2551] - is the new leader among reachable nodes (more leaders may exist)
+
+
+ Cluster Node [akka://RTJVMCluster@localhost:2551] - Received InitJoin message from [Actor[akka://RTJVMCluster@localhost:2552/system/cluster/core/daemon/joinSeedNodeProcess-1#1236436011]] to [akka://RTJVMCluster@localhost:2551]
+ Cluster Node [akka://RTJVMCluster@localhost:2551] - Sending InitJoinAck message from node [akka://RTJVMCluster@localhost:2551] to [Actor[akka://RTJVMCluster@localhost:2552/system/cluster/core/daemon/joinSeedNodeProcess-1#1236436011]] (version [2.5.21])
+ 
+Cluster Node [akka://RTJVMCluster@localhost:2552] - Received InitJoinAck message from [Actor[akka://RTJVMCluster@localhost:2551/system/cluster/core/daemon#1436872566]] to [akka://RTJVMCluster@localhost:2552]
+Cluster Node [akka://RTJVMCluster@localhost:2551] - Node [akka://RTJVMCluster@localhost:2552] is JOINING, roles [dc-default]
+
+ Cluster Node [akka://RTJVMCluster@localhost:2551] - Received InitJoin message from [Actor[akka://RTJVMCluster@localhost:54341/system/cluster/core/daemon/joinSeedNodeProcess-1#1206401164]] to [akka://RTJVMCluster@localhost:2551]
+ Cluster Node [akka://RTJVMCluster@localhost:2551] - Sending InitJoinAck message from node [akka://RTJVMCluster@localhost:2551] to [Actor[akka://RTJVMCluster@localhost:54341/system/cluster/core/daemon/joinSeedNodeProcess-1#1206401164]] (version [2.5.21])
+ 
+ Cluster Node [akka://RTJVMCluster@localhost:2552] - Welcome from [akka://RTJVMCluster@localhost:2551]
+
+Cluster Node [akka://RTJVMCluster@localhost:54341] - Received InitJoinAck message from [Actor[akka://RTJVMCluster@localhost:2551/system/cluster/core/daemon#1436872566]] to [akka://RTJVMCluster@localhost:54341]
+[INFO] [02/22/2021 10:43:51.038] [RTJVMCluster-akka.actor.default-dispatcher-2] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2551] - Node [akka://RTJVMCluster@localhost:54341] is JOINING, roles [dc-default]
+[INFO] [02/22/2021 10:43:51.049] [RTJVMCluster-akka.actor.default-dispatcher-12] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:54341] - Welcome from [akka://RTJVMCluster@localhost:2551]
+
+[INFO] [02/22/2021 10:43:51.212] [RTJVMCluster-akka.actor.default-dispatcher-11] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2551] - Leader is moving node [akka://RTJVMCluster@localhost:2552] to [Up]
+[INFO] [02/22/2021 10:43:51.212] [RTJVMCluster-akka.actor.default-dispatcher-11] [akka.cluster.Cluster(akka://RTJVMCluster)] Cluster Node [akka://RTJVMCluster@localhost:2551] - Leader is moving node [akka://RTJVMCluster@localhost:54341] to [Up]

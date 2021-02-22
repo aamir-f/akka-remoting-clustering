@@ -5,4 +5,5 @@
 
 
 //From Daniel
---> Clustering allows to build distributed application
+--> Clustering allows to build distributed application=-
+
