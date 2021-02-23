@@ -27,6 +27,7 @@ class ClusterSubscriber extends Actor with ActorLogging {
     case MemberUp(member) if member.hasRole("numberCruncher") =>
       log.info(s"HELLO BROTHER: ${member.address}")
     case MemberUp(member) =>
+      log.info("\n======" + member.roles + "\n")
       log.info(s"Let's say welcome to the newest member: ${member.address}")
     case MemberRemoved(member, previousStatus) =>
       log.info(s"Poor ${member.address}, it was removed from $previousStatus")
