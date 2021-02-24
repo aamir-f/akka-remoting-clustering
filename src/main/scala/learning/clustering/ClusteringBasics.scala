@@ -44,7 +44,7 @@ object ClusterBasics extends App {
       case MemberUp(member) =>
         log.info("\n======" + member.roles + "\n")
         log.info(s"Let's say welcome to the newest member: ${member.address}")
-      case MemberRemoved(member, previousStatus) =>
+      case MemberRemoved(member, previousStatus) => //e.g previous state = downed, then MemberRemoved
         log.info(s"Poor member => ${member.address}, was removed from previousStatus: $previousStatus")
       case UnreachableMember(member)             => //A member is considered unreachable by the failure detector
         log.info(s"Uh Oh, member: =. ${member.address}, is unreachable")
@@ -84,12 +84,12 @@ object Manual_Registration_Cluster extends App {
   ))
 
   //Try to join this cluster node with address specified, 58747 will be this node's initial point of context
-  def joinExistingNode =  cluster.join(Address("akka", "RTJVMssCluster", "localhost", 58747))
+  def joinExistingNode =  cluster.join(Address("akka", "RTJVMCluster", "localhost", 51633))
 
   // will create a new cluster for itself, as no seed nodes specified for it
-  def joinMyself = cluster.join(Address("akka", "RTJVMssCluster", "localhost", 2555))
+  def joinMyself = cluster.join(Address("akka", "RTJVMCluster", "localhost", 2555))
 
-  joinExistingCluster
+  joinMyself
   system.actorOf(Props[ClusterSubscriber], "clusterSubscriber")
 
 
