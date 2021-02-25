@@ -84,12 +84,12 @@ object Manual_Registration_Cluster extends App {
   ))
 
   //Try to join this cluster node with address specified, 58747 will be this node's initial point of context
-  def joinExistingNode =  cluster.join(Address("akka", "RTJVMCluster", "localhost", 51633))
+  def joinExistingNode =  cluster.join(Address("akka", "RTJVMCluster", "localhost", 52910))
 
   // will create a new cluster for itself, as no seed nodes specified for it
   def joinMyself = cluster.join(Address("akka", "RTJVMCluster", "localhost", 2555))
 
-  joinMyself
+  joinExistingNode
   system.actorOf(Props[ClusterSubscriber], "clusterSubscriber")
 
 
