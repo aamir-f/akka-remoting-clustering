@@ -89,7 +89,7 @@ object Manual_Registration_Cluster extends App {
   // will create a new cluster for itself, as no seed nodes specified for it
   def joinMyself = cluster.join(Address("akka", "RTJVMCluster", "localhost", 2555))
 
-  joinExistingNode
+  joinMyself
   system.actorOf(Props[ClusterSubscriber], "clusterSubscriber")
 
 

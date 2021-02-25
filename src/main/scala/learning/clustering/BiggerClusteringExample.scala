@@ -3,6 +3,7 @@ package learning.clustering
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Address, Props, ReceiveTimeout}
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent.{InitialStateAsEvents, MemberEvent, MemberJoined, MemberRemoved, MemberUp, UnreachableMember}
+import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import akka.util.Timeout
 import akka.pattern.pipe
 import com.typesafe.config.{Config, ConfigFactory}
@@ -19,9 +20,13 @@ import scala.util.Random
   * if a node dies/leaves, master figures it out, and it can distribute the work between workers it has now
   * Goal: Elastic Distributed Application (elastic, one of reactive manifesto points that reactive systems are elastic)
   */
-object BiggerClusteringExample extends App {
-
-}
+class ClusterWordCountPriorityMailbox(settings: ActorSystem.Settings, config: Config)
+  extends UnboundedPriorityMailbox(
+    PriorityGenerator {
+      case _: MemberEvent => 0
+      case _              => 4
+    }
+  )
 
 object BiggerClusteringExampleDomain {
 
@@ -88,12 +93,14 @@ class Master extends Actor with ActorLogging {
     case ProcessFile(filename)         =>
       val aggregator = context.actorOf(Props[Aggregator], "aggregator")
       scala.io.Source.fromFile(filename).getLines().foreach { line =>
-        self ! ProcessLine(line, aggregator)
+        self ! ProcessLine(line, aggregator) // again problem, mailbox will contains ~4k messages, so events won't get priority
+        //Thread.sleep(10) // will block this actor till filelines * 10 = 30 sec app. so master will not be able to process any new MemberEvents, so it can't up the new workers added, problem, ahhh
       }
     case ProcessLine(line, aggregator) =>
       val workerIndex = Random.nextInt((workers -- pendingRemove.keys).size) //Math.floor
       val worker: ActorRef = (workers -- pendingRemove.keys).values.toSeq(workerIndex)
       worker ! ProcessLine(line, aggregator)
+     // Thread.sleep(10)
   }
 
 }
@@ -106,6 +113,7 @@ class Worker extends Actor with ActorLogging {
     case ProcessLine(line, aggregator) =>
       log.info(s"Processing: $line")
       aggregator ! ProcessLineResult(line.split(" ").length)
+      Thread.sleep(40)
   }
 }
 
@@ -121,7 +129,7 @@ class Aggregator extends Actor with ActorLogging {
     case ProcessLineResult(count) =>
       context.become(online(totalCount + count))
     case ReceiveTimeout           =>
-      log.info(s"TOTAL COUNT: $totalCount")
+      log.info(s"\n\n===TOTAL COUNT===: $totalCount")
       context.setReceiveTimeout(Duration.Inf)
   }
 }
@@ -129,6 +137,7 @@ class Aggregator extends Actor with ActorLogging {
 object SeedNodes extends App {
 
   import BiggerClusteringExampleDomain._
+
   def createNode(port: Int, role: String, props: Props, actorName: String) = {
 
     val config = ConfigFactory.parseString(
@@ -149,4 +158,29 @@ object SeedNodes extends App {
   createNode(2553, "worker", Props[Worker], "worker")
   Thread.sleep(5000)
   master ! ProcessFile("src/main/resources/txt/lipsum.txt")
+
+}
+
+object AdditionWorker extends App {
+
+  val config = ConfigFactory.parseString(
+    """
+      |akka.remote.artery.canonical.port = 2554
+      |akka.cluster.roles = ["worker"]
+      |""".stripMargin
+  ).withFallback(ConfigFactory.load("clustering/count_words_proj.conf"))
+  val system = ActorSystem("WordCountCluster", config)
+  system.actorOf(Props[Worker], "worker")
+}
+
+object AdditionWorker2 extends App {
+
+  val config = ConfigFactory.parseString(
+    """
+      |akka.remote.artery.canonical.port = 2555
+      |akka.cluster.roles = ["worker"]
+      |""".stripMargin
+  ).withFallback(ConfigFactory.load("clustering/count_words_proj.conf"))
+  val system = ActorSystem("WordCountCluster", config)
+  system.actorOf(Props[Worker], "worker")
 }
