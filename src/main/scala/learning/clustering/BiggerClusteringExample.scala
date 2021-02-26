@@ -32,7 +32,7 @@ object BiggerClusteringExampleDomain {
 
   case class ProcessFile(fileName: String)
 
-  case class ProcessLine(line: String, aggreagator: ActorRef)
+  case class ProcessLine(line: String, aggregator: ActorRef)
 
   case class ProcessLineResult(count: Int)
 
@@ -43,6 +43,12 @@ class Master extends Actor with ActorLogging {
   import context.dispatcher
   import BiggerClusteringExampleDomain._
 
+  /**
+    * println(self) ==> Actor[akka://WordCountCluster/user/master#301874455]
+    * println(self.path) ==> akka://WordCountCluster/user/master
+    * println(self.path.address) ==> akka://WordCountCluster
+    * MemberUp(member-address) => akka://WordCountCluster@localhost:2551
+    */
   implicit val timeOut: Timeout = Timeout(3.seconds)
   val cluster = Cluster(context.system)
 
