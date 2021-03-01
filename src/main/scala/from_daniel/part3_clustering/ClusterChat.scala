@@ -70,7 +70,7 @@ class ChatApp(nickname: String, port: Int) extends App {
     s"""
        |akka.remote.artery.canonical.port = $port
      """.stripMargin)
-    .withFallback(ConfigFactory.load("part3_clustering/clusterChat.conf"))
+    .withFallback(ConfigFactory.load("from_daniel/part3_clustering/clusterChat.conf"))
 
   val system = ActorSystem("RTJVMCluster", config)
   val chatActor = system.actorOf(ChatActor.props(nickname, port), "chatActor")

@@ -47,7 +47,7 @@ class Master extends Actor with ActorLogging {
     * println(self) ==> Actor[akka://WordCountCluster/user/master#301874455]
     * println(self.path) ==> akka://WordCountCluster/user/master
     * println(self.path.address) ==> akka://WordCountCluster
-    * MemberUp(member-address) => akka://WordCountCluster@localhost:2551
+    * MemberUp(member.address) => akka://WordCountCluster@localhost:2551
     */
   implicit val timeOut: Timeout = Timeout(3.seconds)
   val cluster = Cluster(context.system)

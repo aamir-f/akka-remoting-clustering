@@ -77,3 +77,14 @@
 
   --> Split brain resolvers to resolve the problem of split brain in a cluster
  */
+
+//====Lightbend-Akka-Clustering=======
+/**
+  * Cluster Formation
+  * Cluster Management
+  * Cluster Communication
+  * CLuster Failure
+  * Healing a Cluster
+  * Split Brain
+  * Lightbend Split Brain Resolver
+  */
