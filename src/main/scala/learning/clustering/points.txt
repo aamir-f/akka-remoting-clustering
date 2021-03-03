@@ -7,3 +7,56 @@
 //From Daniel
 --> Clustering allows to build distributed application=-
 
+=====From Lightbend================
+--> akka clusters provide a way to distribute akka actors across a cluster of nodes
+--> This distribution allows us to overcome many limitations of traditional systems:
+--> With an akka cluster we can:
+    Distribute large tasks across a cluster of machines
+    Reduce the traffic to an overloaded database
+    Share critical data across nodes without additional infrastructure
+    And more!
+
+--> Single machine, dealing with large workloads, we want to improve the performance by adding
+    more CPU's, more memory etc (Vertical Scalability)
+
+--> Akka Cluster Aware Routers:
+    Allows our work to be distributed across cluster
+    a large task can be broken into smaller tasks, and each task can be routed to an instance
+    of our application on another machine
+    we are limited to the size of a single machine. We can add more machines to improve the
+    performance (Horizontal Scalability)
+
+--> Databases:
+    Many applications leverage the database(single instance, it's a bottleneck) heavily
+    Multiple calls are made to db for incomming requests
+    locks and transactions ensure consistency , but create contention
+    As application scales up, contention becomes worse, and eventually db simply can't keep up
+    Solution: Akka Cluster Sharding
+
+--> Akka Cluster Sharding distributes Actors across the cluster
+    Each Actor maintains state for a specific database identifier(probably a table)
+    The Actor's in-memory state acts as a cache, eliminating the need for the database reads
+    The Actor Model guarantees that the state and database are always consistent
+    Separate Reads from Writes.
+    Akka Cluster Sharding can be used to create a write thru cache
+
+--> Problem: Shared Data/State
+    Sometimes there is information that is critical to our system, it's needed in variety of place, all the time
+    Often, its kept in db table or some cache service like redis, in this case we return to same database bottleneck
+    Solution: Akka Distributed Data
+
+--> Akka Distributed Data provides, local, replicated, in-memory data storage
+    application-instance1---distributed-data ---from replication
+    application-instance2---distributed-data ---from replication
+    Because it is local, and in-memory, access is very fast
+    It is asynchronously replicated to other nodes, ensuring all nodes have access to the data
+    Replication is low-latency, ensuring fast updates across the cluster
+    Means if we make update to one node, it will quickly get replicated to another node
+    No additional infrastructure needed
+
+--> Features like Cluster aware routers, Cluster Sharding and Distributed data make Akka Cluster
+    very powerful.
+    Many traditional systems are limited by the size of a single physical machine
+    Akka cluster allows us to take advantage of hardware available on many machines
+    It also allows ways to reduce or eliminate bottleneck in the system
+    This allows Akka Clusters to be uniquely Scalable
