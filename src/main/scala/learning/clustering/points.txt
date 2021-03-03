@@ -60,3 +60,12 @@
     Akka cluster allows us to take advantage of hardware available on many machines
     It also allows ways to reduce or eliminate bottleneck in the system
     This allows Akka Clusters to be uniquely Scalable
+
+    //Akka remote transports
+     remote {
+        artery {
+          enabled = on
+          transport = aeron-udp #tcp too, #tls-tcp : if encryption is required
+          canonical.hostname = "localhost"
+        }
+      }
