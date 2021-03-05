@@ -23,7 +23,7 @@
     Allows our work to be distributed across cluster
     a large task can be broken into smaller tasks, and each task can be routed to an instance
     of our application on another machine
-    we are limited to the size of a single machine. We can add more machines to improve the
+    we are not limited to the size of a single machine. We can add more machines to improve the
     performance (Horizontal Scalability)
 
 --> Databases:
@@ -61,6 +61,7 @@
     It also allows ways to reduce or eliminate bottleneck in the system
     This allows Akka Clusters to be uniquely Scalable
 
+===Cluster-Formation=====
     //Akka remote transports
      remote {
         artery {
@@ -69,3 +70,34 @@
           canonical.hostname = "localhost"
         }
       }
+
+      akka.actor.provider = remote: allows actor system to manage actors on other nodes
+
+--> Each instance (akka://AS@localhost:2114) of the ActorSystem that connects to the cluster is called a member, or node.
+--> Each cluster member can be addressed with a combination of hostname and port.
+--> A uuid is also included as a unique identifier for each type of the hostname and port.
+--> Each time actor system at any hostname and port is restarted, a new uuid is generated.
+--> A given hostname, port, uuid combination can only join the cluster once.
+--> Joining an Akka Cluster requires an initial set of contact points, known as seed nodes.
+--> Seed nodes don't need to be special in any way. Any member of a cluster can potentially act as a seed node.
+--> When the node has fully joined and been accepted into the cluster, the seed nodes are no longer used.
+--> Gossip protocol
+--> Akka has build in support for statically configured seed-nodes
+    cluster {
+        seed-nodes = ["akka://MyActorSystem@localhost:2551", ""]
+    }
+    Other techniques such as Akka Cluster Bootstrap, it leverages available infrastructure to dynamically assign
+    seed nodes.
+--> The first-node in the seed list is required during cluster formation
+    - When the first seed node tries to join
+       If the cluster has not formed: it will form a cluster of one node.
+       If the cluster has already formed: it will join the existing cluster.
+    - All other nodes require an existing cluster to join.
+    - Once the cluster has formed, the first node is not important
+
+--> Seed nodes represent initial contact points for the cluster.
+--> If all seed nodes were restarted/failed at the same time, there would be no way to contact any remaining nodes
+    (become orphaned, they will form own cluster, no way to contact them, no seed node connected to them).
+--> The remaining nodes would need to be restarted to recover.
+--> Good Practice: Ensure that one ore more seed nodes remain running at all times.
+--> Best Practice: Avoid static seed node configuration. User Akka Cluster Bootstrap instead.

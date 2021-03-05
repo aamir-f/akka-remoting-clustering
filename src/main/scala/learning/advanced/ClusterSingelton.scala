@@ -47,7 +47,7 @@ import scala.util.Random
   * eventually be started.
   *
   * Make sure to not use a Cluster downing strategy that may split the cluster into several separate clusters
-  * in case of network problems or system overload (long GC pauses), since that will result in in
+  * in case of network problems or system overload (long GC pauses), since that will result in
   * multiple Singletons being started, one in each separate cluster!
   *
   * Singletons being good for "maintaining a well-defined transaction ordering"
