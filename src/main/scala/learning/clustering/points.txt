@@ -101,3 +101,11 @@
 --> The remaining nodes would need to be restarted to recover.
 --> Good Practice: Ensure that one ore more seed nodes remain running at all times.
 --> Best Practice: Avoid static seed node configuration. User Akka Cluster Bootstrap instead.
+
+--> In Examples, having 2 nodes for reactive bbq with sharding, so with akka cluster, all the traffice has been funneled to one actor running on
+    one node, so that's why we can maintain consistency.So, benefit is we can do all of that work or lot of that work in memory, and we can just
+    return that data from memory, because we know there isn't other actor running on another node somewhere that is also doing the same thing.
+    At a high level what this allows us to do is have our Loyalty Accounts distributed across that cluster. Each node of the cluster will host a subset of the accounts, maintaining their data in memory. This allows us to distribute the load, but also use those accounts to maintain consistency, and minimize database reads. This is done using Akka Cluster Sharding.
+    With our cluster fully working, we can retrieve data from either node, and we can update data on either node, but no matter which node we send the request through, it will direct that request to whichever node is hosting the actor for our Loyalty account. This guarantees consistency.
+
+    Bonus Exploration: If you would like to try some more experiments, you can try using different account IDs. You should be able to observe that some account IDs always appear on node 1 while others appear on node 2. You can see where they are being created by watching the logs.
