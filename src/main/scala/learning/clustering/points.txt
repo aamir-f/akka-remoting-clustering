@@ -61,7 +61,7 @@
     It also allows ways to reduce or eliminate bottleneck in the system
     This allows Akka Clusters to be uniquely Scalable
 
-===Cluster-Formation=====
+========Cluster-Formation==========
     //Akka remote transports
      remote {
         artery {
@@ -109,3 +109,12 @@
     With our cluster fully working, we can retrieve data from either node, and we can update data on either node, but no matter which node we send the request through, it will direct that request to whichever node is hosting the actor for our Loyalty account. This guarantees consistency.
 
     Bonus Exploration: If you would like to try some more experiments, you can try using different account IDs. You should be able to observe that some account IDs always appear on node 1 while others appear on node 2. You can see where they are being created by watching the logs.
+
+========Cluster-Management==========
+--> A running cluster requires monitoring, and occasional maintenance.
+--> Akka HTTP Cluster Management provides your application with a set of HTTP
+	endpoints to manage the cluster.
+	It can be used to:
+	- Remove members from the cluster.
+	- View the status and health of the cluster and it's members.
+	- View information about cluster sharding distribution.
