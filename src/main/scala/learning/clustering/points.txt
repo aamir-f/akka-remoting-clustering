@@ -7,7 +7,18 @@
 //From Daniel
 --> Clustering allows to build distributed application=-
 
+
 =====From Lightbend================
+/**
+  * Cluster Formation
+  * Cluster Management
+  * Cluster Communication
+  * CLuster Failure
+  * Healing a Cluster
+  * Split Brain
+  * Lightbend Split Brain Resolver
+  */
+  
 --> akka clusters provide a way to distribute akka actors across a cluster of nodes
 --> This distribution allows us to overcome many limitations of traditional systems:
 --> With an akka cluster we can:
