@@ -44,6 +44,20 @@ package learning.clustering
 
 */
 
+/**
+  * Modelling London Underground
+    - each tube station has its own application with its own ActorSystem.
+    - customer taps their Oyster card on the turnstiles.
+    - the turnstile queries an OysterCardValidator to validate the entry.
+    - once it replies, the turnstile will either open the gate or display an error.
+
+   * OyesterCardValidator
+     - 3 billion rides a year; needs to be shareded.
+     - each station (node) will have a ShardRegion. 
+     - since we are sharding this OyesterCardValidator, each shardRegion will have some
+       small OysterCardValidator entities as their children and  theses entities will be 
+       dynamically generated on a by need basis.
+*/
 object ClusterSharding_1 extends App {
 
 

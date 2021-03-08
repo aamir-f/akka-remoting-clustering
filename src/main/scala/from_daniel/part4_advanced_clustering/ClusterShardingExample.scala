@@ -59,6 +59,9 @@ class OysterCardValidator extends Actor with ActorLogging {
 // Sharding settings
 /////////////////////////////////
 
+/**
+  This will help to figure for a SR to which shard, entity to forward message to
+*/
 object TurnstileSettings {
 
   val numberOfShards = 10 // use 10x number of nodes in your cluster
@@ -102,6 +105,8 @@ class TubeStation(port: Int, numberOfTurnstiles: Int) extends App {
   val system = ActorSystem("RTJVMCluster", config)
 
   // Setting up Cluster Sharding
+  // so whenever we need to send a message to OysterCardValidator, we need to send message to This
+  // validatorShardRegionRef
   val validatorShardRegionRef: ActorRef = ClusterSharding(system).start(
     typeName = "OysterCardValidator",
     entityProps = Props[OysterCardValidator],
