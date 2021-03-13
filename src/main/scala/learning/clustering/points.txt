@@ -129,3 +129,87 @@
 	- Remove members from the cluster.
 	- View the status and health of the cluster and it's members.
 	- View information about cluster sharding distribution.
+--> To Use Akka Management, we must configure the host and port it will listen on.
+--> It runs on different port than akka-http, can be useful to enforce security policies.
+--> use route-providers-ready-only=false, to enable write requests(Post/Put etc)
+--> It can also be configured for Authentication, and SSL if you need additional security.
+--> Starting Akka Management = AkkaManagement(system).start() // start http server after config management.
+--> Akka Cluster HTTP Endpoints:
+    - GET /cluster/members/ =expose status of cluster, including membership, unreachable nodes etc
+    - PUT /cluster/members/{address} = initiate change to the cluster membership (e.g leave or down)
+    - GET /cluster/shards/{name} = expose shard information for the shard region with the given name. etc	
+--> In addition to the akka http endpoints for managing the cluster, akka management includes other features:
+    - Akka Discovery: provides methods for locating and discovering services, supported by technologies such as
+      Kubernetes, Marathon , DNS etc.
+    - Akka Cluster Bootstrap: provides automated seed node discovery using Akka Discovery.
+    - Health Check Endpoints: provides facilities for readiness and liveness checks, useful when
+    	integrating with orchestration platform. 
+    	
+ 
+ ========Cluster-Communication==========
+--> Akka cluster state is communicated using a Gossip Protocol. see png
+--> At a regular interval, each member sends their view of the cluster state to a random node.
+--> This information include: The status of each member(e.g Up, Joining etc), if each member
+      has seen this version (e.g Gossip Version 5 , e.g latest one) of the cluster state (true /false), see png
+-->With a stable cluster, eventually all nodes will see the same state. This is called Convergence. when status = true for all.
+--> Gossiping continues forever, as states will continue to change.
+--> Note: Each node makes it's own decision about whether it has reached convergence. when he see status = true all.
+--> After Convergence, each node will have the same sorted set of nodes.
+--> The first eligible node in the sorted set becomes the leader and will perform leader duities.
+--> Leader duities include member state changes such as marking a Joining member's state as Up.
+--> Note: The Leader may be different after each round of convergence if cluster membership has changed(e.g if node1 -> Leaving, it won't be leader anymore on next 	convergence).
+--> Note: There is no Leader Election, Each node makes its own decision, it doesn't communicate with other nodes to become a leader. They look at table. check png3
+--> A node begins in the Joining state, Once all nodes have seen the new node joining(convergence is reached), the leaders sets it to Up.
+--> A node leaving the cluster, will move itself to the Leaving state. Once convergence is reached, the leader sets it to Exiting.
+--> Once convergence is reached, the leaders sets it as Removed and must be restarted before it can rejoin.
+
+--> if seed-nodes = [akka://AS@localhost:2551, akka://AS@localhost:2552], if we start node on port 2552, it won't join the cluster,
+    check /cluster/members, mostly empty, if can't join the cluster, because there is no cluster formed. Once 2551 joins then cluster will be formed.
+    
+--> However, if we start 2551 alone, since it being the first in seed-nodes, it will form the cluster itself, also worth noting, it we first run 2552,
+    we know it can't form cluster, now when we run 2551, cluster is formed, and oldest: still be 2551, even if it joined later, reason is:
+    oldest is not necessarily the oldest running instance,  it is the instance that joined the cluster first, i.e 2551, 2552 was allowed to join only
+    after 2551 formed it.
+    
+--> Important to note, if both  2551, 2552 are running now, with 2551 being the leader, now if 2551 leaves the cluster, 2552 still holds the cluster, and
+    still will still be intact, with leader now 2552	
+    
+--> Also, as now only 2552 is running in cluster, if node 2553 starts, it will join the cluster normally, and leader 2552 will move it to Up state.    
+    Same as above, now if 2552 leaves, 2553 will hold the cluster, even if it was not in the seed-nodes list.     
+    Also, note if 2552 is leader as 2551 left earlier, now 2553 joined in cluster, 2552 being leader moved it to up. Now if 2551 will join again the
+    cluster, remember, Leader again will be 2551. So leader is not decided by the age of the node, it is decided simply by taking addresses of node 
+    and sorting them, and picking the top one. So theoretically 2551 will always be the leader.
+      	
+=========Cluster-Failure========== 
+-> Can be application failures, hardware failures, network failures etc.
+--> Unfortunately no network is safe from failures. 
+--> When a member is disconnected from the cluster for some reason, it is marked as Unreachable.
+--> If the member recovers, it will be marked Reachable again.
+--> If the issue is permenant, then the member must be marked as Down. A downed member is permenantely removed from cluster. It cannot rejoin.
+--> To detect failures, each member in a cluster is monitored up to 5 other members. upto, for other small cluster this number can be small.
+--> Heartbeats are sent between members to verify communication.
+--> Each member has a configurable Failure Detector.
+--> It uses a history of heartbeats to determine the likelihood that a member is down.
+--> A singe failed heartbeat does not mean a member is Unreachable.  
+--> If one member determines another to be Unreachable, that information will be gossiped to the cluster.
+--> The member will remain Unreachable until all monitoring nodes detect it as reachable again.
+--> Members will continue to try and reach the node until it is Down.
+--> Reasons for Unreachable Nodes:
+    -Fatal application errors (crashes).
+    -Resource exhaustion (CPU or/and thread exhaustion, Memory leaks, Incorrect JVM sizing, Lengthy garbage collection pauses, etc)	
+--> A network partition or failure can also result in Unreachable members.
+--> The root cause of an Unreachable member should always be determined before attempting to adjust the Failure Detector Settings.
+
+--> When a node is considered Unreachable:
+    -Running applications will continue to operate, but..
+    - Convergence is not possible, as there is one broken nodes, therefore..
+    - No leader actions are possible, therefore..
+    - New Nodes cannot fully join the Cluster. So,
+    --> The Unreachable members must become Reachable again or be marked as Down before new members can be added.	
+    - As now newly members can't join cluster, so Joining members are promoted to WeaklyUp.
+    - Weakly up members can be used by application, but should not be used where consistency is important. Weakly members cannot host
+      Cluster Shards or Cluster Singletons. When Convergence is reached, they will be promoted to Up.
+--> Even when a node is marked as Unreachable, its still a member of the cluster, so show in /cluster/members with unreachable key.
+	observedBy in akka management will be list of other Up nodes observing the Unreachable node, and 2553 joining later will be WeakylyUp status.
+--> Using pause/resume script we can see once resumed, 2551 becomes Reachable and Up and leader again.	
+	
