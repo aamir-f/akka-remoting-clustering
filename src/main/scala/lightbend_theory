@@ -1,0 +1,303 @@
+-->The akka-cluster module provides a very simple cluster membership service which lays the foundations for all
+   higher-level cluster features of Akka.A cluster is made up from collaborating actor systems called member nodes.
+   It is important to understand that cluster membership happens at the level of actor systems,not individual actors.
+   Nevertheless it can be used to build high-level cluster features which apply to individual actors
+
+
+//From Daniel
+--> Clustering allows to build distributed application=-
+
+
+=====From Lightbend================
+/**
+  * Cluster Formation
+  * Cluster Management
+  * Cluster Communication
+  * CLuster Failure
+  * Healing a Cluster
+  * Split Brain
+  * Lightbend Split Brain Resolver
+  */
+  
+--> akka clusters provide a way to distribute akka actors across a cluster of nodes
+--> This distribution allows us to overcome many limitations of traditional systems:
+--> With an akka cluster we can:
+    Distribute large tasks across a cluster of machines
+    Reduce the traffic to an overloaded database
+    Share critical data across nodes without additional infrastructure
+    And more!
+
+--> Single machine, dealing with large workloads, we want to improve the performance by adding
+    more CPU's, more memory etc (Vertical Scalability)
+
+--> Akka Cluster Aware Routers:
+    Allows our work to be distributed across cluster
+    a large task can be broken into smaller tasks, and each task can be routed to an instance
+    of our application on another machine
+    we are not limited to the size of a single machine. We can add more machines to improve the
+    performance (Horizontal Scalability)
+
+--> Databases:
+    Many applications leverage the database(single instance, it's a bottleneck) heavily
+    Multiple calls are made to db for incomming requests
+    locks and transactions ensure consistency , but create contention
+    As application scales up, contention becomes worse, and eventually db simply can't keep up
+    Solution: Akka Cluster Sharding
+
+--> Akka Cluster Sharding distributes Actors across the cluster
+    Each Actor maintains state for a specific database identifier(probably a table)
+    The Actor's in-memory state acts as a cache, eliminating the need for the database reads
+    The Actor Model guarantees that the state and database are always consistent
+    Separate Reads from Writes.
+    Akka Cluster Sharding can be used to create a write thru cache
+
+--> Problem: Shared Data/State
+    Sometimes there is information that is critical to our system, it's needed in variety of place, all the time
+    Often, its kept in db table or some cache service like redis, in this case we return to same database bottleneck
+    Solution: Akka Distributed Data
+
+--> Akka Distributed Data provides, local, replicated, in-memory data storage
+    application-instance1---distributed-data ---from replication
+    application-instance2---distributed-data ---from replication
+    Because it is local, and in-memory, access is very fast
+    It is asynchronously replicated to other nodes, ensuring all nodes have access to the data
+    Replication is low-latency, ensuring fast updates across the cluster
+    Means if we make update to one node, it will quickly get replicated to another node
+    No additional infrastructure needed
+
+--> Features like Cluster aware routers, Cluster Sharding and Distributed data make Akka Cluster
+    very powerful.
+    Many traditional systems are limited by the size of a single physical machine
+    Akka cluster allows us to take advantage of hardware available on many machines
+    It also allows ways to reduce or eliminate bottleneck in the system
+    This allows Akka Clusters to be uniquely Scalable
+
+========Cluster-Formation==========
+    //Akka remote transports
+     remote {
+        artery {
+          enabled = on
+          transport = aeron-udp #tcp too, #tls-tcp : if encryption is required
+          canonical.hostname = "localhost"
+        }
+      }
+
+      akka.actor.provider = remote: allows actor system to manage actors on other nodes
+
+--> Each instance (akka://AS@localhost:2114) of the ActorSystem that connects to the cluster is called a member, or node.
+--> Each cluster member can be addressed with a combination of hostname and port.
+--> A uuid is also included as a unique identifier for each type of the hostname and port.
+--> Each time actor system at any hostname and port is restarted, a new uuid is generated.
+--> A given hostname, port, uuid combination can only join the cluster once.
+--> Joining an Akka Cluster requires an initial set of contact points, known as seed nodes.
+--> Seed nodes don't need to be special in any way. Any member of a cluster can potentially act as a seed node.
+--> When the node has fully joined and been accepted into the cluster, the seed nodes are no longer used.
+--> Gossip protocol
+--> Akka has build in support for statically configured seed-nodes
+    cluster {
+        seed-nodes = ["akka://MyActorSystem@localhost:2551", ""]
+    }
+    Other techniques such as Akka Cluster Bootstrap, it leverages available infrastructure to dynamically assign
+    seed nodes.
+--> The first-node in the seed list is required during cluster formation
+    - When the first seed node tries to join
+       If the cluster has not formed: it will form a cluster of one node.
+       If the cluster has already formed: it will join the existing cluster.
+    - All other nodes require an existing cluster to join.
+    - Once the cluster has formed, the first node is not important
+
+--> Seed nodes represent initial contact points for the cluster.
+--> If all seed nodes were restarted/failed at the same time, there would be no way to contact any remaining nodes
+    (become orphaned, they will form own cluster, no way to contact them, no seed node connected to them).
+--> The remaining nodes would need to be restarted to recover.
+--> Good Practice: Ensure that one ore more seed nodes remain running at all times.
+--> Best Practice: Avoid static seed node configuration. User Akka Cluster Bootstrap instead.
+
+--> In Examples, having 2 nodes for reactive bbq with sharding, so with akka cluster, all the traffice has been funneled to one actor running on
+    one node, so that's why we can maintain consistency.So, benefit is we can do all of that work or lot of that work in memory, and we can just
+    return that data from memory, because we know there isn't other actor running on another node somewhere that is also doing the same thing.
+    At a high level what this allows us to do is have our Loyalty Accounts distributed across that cluster. Each node of the cluster will host a subset of the accounts, maintaining their data in memory. This allows us to distribute the load, but also use those accounts to maintain consistency, and minimize database reads. This is done using Akka Cluster Sharding.
+    With our cluster fully working, we can retrieve data from either node, and we can update data on either node, but no matter which node we send the request through, it will direct that request to whichever node is hosting the actor for our Loyalty account. This guarantees consistency.
+
+    Bonus Exploration: If you would like to try some more experiments, you can try using different account IDs. You should be able to observe that some account IDs always appear on node 1 while others appear on node 2. You can see where they are being created by watching the logs.
+
+========Cluster-Management==========
+--> A running cluster requires monitoring, and occasional maintenance.
+--> Akka HTTP Cluster Management provides your application with a set of HTTP
+	endpoints to manage the cluster.
+	It can be used to:
+	- Remove members from the cluster.
+	- View the status and health of the cluster and it's members.
+	- View information about cluster sharding distribution.
+--> To Use Akka Management, we must configure the host and port it will listen on.
+--> It runs on different port than akka-http, can be useful to enforce security policies.
+--> use route-providers-ready-only=false, to enable write requests(Post/Put etc)
+--> It can also be configured for Authentication, and SSL if you need additional security.
+--> Starting Akka Management = AkkaManagement(system).start() // start http server after config management.
+--> Akka Cluster HTTP Endpoints:
+    - GET /cluster/members/ =expose status of cluster, including membership, unreachable nodes etc
+    - PUT /cluster/members/{address} = initiate change to the cluster membership (e.g leave or down)
+    - GET /cluster/shards/{name} = expose shard information for the shard region with the given name. etc	
+--> In addition to the akka http endpoints for managing the cluster, akka management includes other features:
+    - Akka Discovery: provides methods for locating and discovering services, supported by technologies such as
+      Kubernetes, Marathon , DNS etc.
+    - Akka Cluster Bootstrap: provides automated seed node discovery using Akka Discovery.
+    - Health Check Endpoints: provides facilities for readiness and liveness checks, useful when
+    	integrating with orchestration platform. 
+    	
+ 
+ ========Cluster-Communication==========
+--> Akka cluster state is communicated using a Gossip Protocol. see png
+--> At a regular interval, each member sends their view of the cluster state to a random node.
+--> This information include: The status of each member(e.g Up, Joining etc), if each member
+      has seen this version (e.g Gossip Version 5 , e.g latest one) of the cluster state (true /false), see png
+-->With a stable cluster, eventually all nodes will see the same state. This is called Convergence. when status = true for all.
+--> Gossiping continues forever, as states will continue to change.
+--> Note: Each node makes it's own decision about whether it has reached convergence. when he see status = true all.
+--> After Convergence, each node will have the same sorted set of nodes.
+--> The first eligible node in the sorted set becomes the leader and will perform leader duities.
+--> Leader duities include member state changes such as marking a Joining member's state as Up.
+--> Note: The Leader may be different after each round of convergence if cluster membership has changed(e.g if node1 -> Leaving, it won't be leader anymore on next 	convergence).
+--> Note: There is no Leader Election, Each node makes its own decision, it doesn't communicate with other nodes to become a leader. They look at table. check png3
+--> A node begins in the Joining state, Once all nodes have seen the new node joining(convergence is reached), the leaders sets it to Up.
+--> A node leaving the cluster, will move itself to the Leaving state. Once convergence is reached, the leader sets it to Exiting.
+--> Once convergence is reached, the leaders sets it as Removed and must be restarted before it can rejoin.
+
+--> if seed-nodes = [akka://AS@localhost:2551, akka://AS@localhost:2552], if we start node on port 2552, it won't join the cluster,
+    check /cluster/members, mostly empty, if can't join the cluster, because there is no cluster formed. Once 2551 joins then cluster will be formed.
+    
+--> However, if we start 2551 alone, since it being the first in seed-nodes, it will form the cluster itself, also worth noting, it we first run 2552,
+    we know it can't form cluster, now when we run 2551, cluster is formed, and oldest: still be 2551, even if it joined later, reason is:
+    oldest is not necessarily the oldest running instance,  it is the instance that joined the cluster first, i.e 2551, 2552 was allowed to join only
+    after 2551 formed it.
+    
+--> Important to note, if both  2551, 2552 are running now, with 2551 being the leader, now if 2551 leaves the cluster, 2552 still holds the cluster, and
+    still will still be intact, with leader now 2552	
+    
+--> Also, as now only 2552 is running in cluster, if node 2553 starts, it will join the cluster normally, and leader 2552 will move it to Up state.    
+    Same as above, now if 2552 leaves, 2553 will hold the cluster, even if it was not in the seed-nodes list.     
+    Also, note if 2552 is leader as 2551 left earlier, now 2553 joined in cluster, 2552 being leader moved it to up. Now if 2551 will join again the
+    cluster, remember, Leader again will be 2551. So leader is not decided by the age of the node, it is decided simply by taking addresses of node 
+    and sorting them, and picking the top one. So theoretically 2551 will always be the leader.
+      	
+=========Cluster-Failure========== 
+-> Can be application failures, hardware failures, network failures etc.
+--> Unfortunately no network is safe from failures. 
+--> When a member is disconnected from the cluster for some reason, it is marked as Unreachable.
+--> If the member recovers, it will be marked Reachable again.
+--> If the issue is permenant, then the member must be marked as Down. A downed member is permenantely removed from cluster. It cannot rejoin.
+--> To detect failures, each member in a cluster is monitored up to 5 other members. upto, for other small cluster this number can be small.
+--> Heartbeats are sent between members to verify communication.
+--> Each member has a configurable Failure Detector.
+--> It uses a history of heartbeats to determine the likelihood that a member is down.
+--> A singe failed heartbeat does not mean a member is Unreachable.  
+--> If one member determines another to be Unreachable, that information will be gossiped to the cluster.
+--> The member will remain Unreachable until all monitoring nodes detect it as reachable again.
+--> Members will continue to try and reach the node until it is Down.
+--> Reasons for Unreachable Nodes:
+    -Fatal application errors (crashes).
+    -Resource exhaustion (CPU or/and thread exhaustion, Memory leaks, Incorrect JVM sizing, Lengthy garbage collection pauses, etc)	
+--> A network partition or failure can also result in Unreachable members.
+--> The root cause of an Unreachable member should always be determined before attempting to adjust the Failure Detector Settings.
+
+--> When a node is considered Unreachable:
+    -Running applications will continue to operate, but..
+    - Convergence is not possible, as there is one broken nodes, therefore..
+    - No leader actions are possible, therefore..
+    - New Nodes cannot fully join the Cluster. So,
+    --> The Unreachable members must become Reachable again or be marked as Down before new members can be added.	
+    - As now newly members can't join cluster, so Joining members are promoted to WeaklyUp.
+    - Weakly up members can be used by application, but should not be used where consistency is important. Weakly members cannot host
+      Cluster Shards or Cluster Singletons. When Convergence is reached, they will be promoted to Up.
+--> Even when a node is marked as Unreachable, its still a member of the cluster, so show in /cluster/members with unreachable key.
+	observedBy in akka management will be list of other Up nodes observing the Unreachable node, and 2553 joining later will be WeakylyUp status.
+--> Using pause/resume script we can see once resumed, 2551 becomes Reachable and Up and leader again.	
+	
+======Healing the Cluster Manually==================
+--> When a member fails or becomes unresponsive, recovery can be simple:
+	-Restart the problem member(s) on the same host and port.
+	-The cluster will recognize a new instance based on the UUID when that old instance will be removed.
+	- The old instance will be removed. The new instance will join.
+	- If this solves the issue, then the cluster will return to convergence.
+--> Orchestration tools such as Kubernetes do this automatically.
+--> Some failures such as network partition, require an additional steps to recover:
+	- First, decide which side of the partition need to be cleaned up.
+	- Shut down the members that will be cleaned up.
+	- Inform the cluster that those members are Down.
+	- Create new members to replace the old.
+--> Orchestration tool will not handle this automatically.
+--> It is critical that old members be Terminated and then Downed.	
+--> Akka Management can be used to manually Down a member in your cluster.
+--> TO Down a member you do an HTTP PUT to : http://localhost:8558/cluster/members/MyService@127.0.0.1:2551
+--> An operation must be included as form data indicating you want to down the node.
+
+curl -X PUT -H 'Content-Type: multipart/form-data' -F operation=down http://localhost:8558/cluster/members/MyService@127.0.0.1
+--> This will initiate the Downing process.
+--> Important: When Downing an Unreachable member it is very critical that the member be terminated first.
+--> Failure to terminate the member means that is may continue to operate, unaware that it has been removed from the cluster.
+--> Ths can lead to a dangerous condition know as Split Brain.
+--> The paused node can be terminated: lsof -i :2551 | grep LISTEN | awk '{print $2}' gives process Id, then kill it, kill -9 pid.
+--> since now its killed, it is Down, but still part of cluster as shown in localhost:8559/clusters/members.
+--> Now we have to remove it from cluster , use curl: curl -X PUT -H 'Content-Type: multipart/form-data' -F operation=down http://localhost:8558/cluster/members/Loyalty@127.0.0.1
+-->If we pause 2551, and Down it with curl, not resume again 2551, it won't come back, coz its Down and gone, it won't show in akka management. 
+--> Interesting part is, http://localhost:8558/cluster/members, for 2551, will show 2552, 2553 as unreachable, as 2551 is unable to talk to them.
+	kind of a mild Split Brain
+--> Only first a node must be terminated, Downed and then started again so  it can join that healthy cluster again.	
+	
+===========Split Brain=====================
+-->A Split Brain is a destructive condition of a Cluster.
+-->It occurs when a single cluster separates into two or more distinct clusters.
+--> Under normal, safe operation, this should not occur.
+--> However, poor cluster configuration and/or management can result in this condition. i.e if we can't Terminate a node and directly Down it because of poor management.
+--> When a node fails/crashes, Downing will remove the failed member, this is safe because the node has already been Terminated.
+--> Split Brain is caused by improper Downing of members. If a member id Downed but not Terminated then it may form its own independent cluster.
+--> A Network Partition or temporary interruption creates a possible Split Brain Scenario.
+--> If Unreachable Nodes are Downed but not Terminated it can cause a Split Brain.
+--> Each side of the partiton will move back to a healthy state.
+--> Each side will form its own cluster!
+--> Even if the network partition resolves, the cluster will never heal.
+--> Remember: we should Only Down nodes that have been fully Terminated, then we won't enter this split brain scenarios.
+
+--> Cluster Sharding/Singleton are used to enforce data consistency.
+--> They require single actor instances to be running in the cluster.
+--> In a Split Brain scenario multiple cluster will form!
+--> Each cluster will have it's own copy of the actors.
+--> This leads to inconsistency, and data corruption.
+--> Remeber: Be very careful when Downing unreachable nodes if using Sharding/Singletons.	
+--> Split Brain can also cause cluster degradation.
+--> Most unreachable members are due to unresponsive applications(Long GC Pause,CPU overuse, thread starvation, network partition etc).
+   These conditions are often temporary.Can come back again to reachable state.
+--> Nodes that are Downed but not Terminated cannot rejoin the cluster. These nodes becomes Oprhaned.
+--> Remember: If a partition is temporary, the cluster can heal itself.
+
+--> Split Brain can be a severe problem. But in a properly managed cluster it doesn't have to be.
+--> Using Manual Downing allows an educated operator to ensure Split Brain never occurs. Go and check in Akka Management e.g
+    however, manual intervention for every problem can be slow, and expensive.
+--> Simple situations (such as crashes) are often handled by an orchestration platform (e.g kubernetes)
+--> The more complicated (and dangerous) situations are handled by the Lightbend Split Brain Resolver.
+	
+--> akka.cluster.auto-down-unreachable-afterr = 5 seconds [most common case of split brain was Auto-Downing, it was intended for local testing not for production.]	It used to Down an unreachable node, without Terminating it!
+-->It was there prior to akka 2.5, it was removed i.e Auto-Downing was removed in Akka 2.6 for these reasons.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
